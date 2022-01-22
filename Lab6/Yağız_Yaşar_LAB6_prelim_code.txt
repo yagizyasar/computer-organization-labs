@@ -1,0 +1,244 @@
+CS224
+Section No.: 1
+Spring 2021
+Lab No.: 6
+Yağız Yaşar/21902951
+
+.text
+
+jal userInterface
+j finish
+
+matrixOp:
+	addi $sp, $sp, -8
+	sw $ra, 0($sp)
+	sw $s2, 4($sp)
+	move $t0, $zero
+	matrixLoop: 
+		addi $t0, $t0, 1
+		sw $t0, 0($s2)
+		addi $s2, $s2, 4
+		beq $t0, $s1, matrixLoopDone
+		j matrixLoop
+	matrixLoopDone:
+	lw $s2, 4($sp)
+	lw $ra, 0($sp)
+	addi $sp, $sp, 8
+	jr $ra 
+
+displayElement:
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	subi $t0, $s3, 1
+	subi $t1, $s4, 1
+	mul $t0, $t0, $s0
+	add $t2, $t0, $t1
+	mul $t2, $t2, 4
+	add $t3, $t2, $s2
+	li $v0, 4
+	la $a0, dispElement
+	syscall
+	li $v0, 1
+	lw $a0, 0($t3)
+	syscall
+	li $v0, 4
+	la $a0, newLine
+	syscall
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra
+	
+	
+findRowAverage:
+	addi $sp, $sp, -12
+	sw $ra, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	move $t0, $zero #cnt
+	move $t1, $zero #sum
+	rowLoop:
+		lw $t2, 0($s2)
+		add $t1, $t1, $t2
+		addi $s2, $s2, 4
+		beq $t0, $s1, rowLoopDone
+		addi $t0, $t0, 1
+		j rowLoop
+	rowLoopDone:
+	li $v0, 4
+	la $a0, rowAveDisplay
+	syscall
+	div $t1, $s1
+	mflo $t3
+	li $v0, 1
+	move $a0, $t3
+	syscall
+	li $v0, 4
+	la $a0, newLine
+	syscall
+	lw $s2, 8($sp)
+	lw $s1, 4($sp)
+	lw $ra, 0($sp)
+	addi $sp, $sp, 12
+	jr $ra	
+		
+findColAverage:
+	addi $sp, $sp, -12
+	sw $ra, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	move $t0, $zero #sum
+	move $t1, $zero #col cnt
+	mul $t3, $s0, 4 
+	firstRow:
+		move $t2, $zero #row cnt
+		mul $t4, $t1, 4
+		add $t5, $t4, $s2
+		lw $t6, 0($t5)
+		add $t0, $t0, $t6 
+		otherRows:
+			add $t5, $t5, $t3
+			lw $t6, 0($t5)
+			add $t0, $t0, $t6 
+			addi $t2, $t2, 1
+			beq $t2, $s0, colDone
+			j otherRows
+		colDone:
+		addi $t1, $t1, 1
+		beq $t1, $s0, colLoopDone
+		j firstRow	
+	colLoopDone:
+	li $v0, 4
+	la $a0, colAveDisplay
+	syscall
+	div $t0, $s1
+	mflo $t3
+	li $v0, 1
+	move $a0, $t3
+	syscall
+	li $v0, 4
+	la $a0, newLine
+	syscall		
+	lw $s2, 8($sp)
+	lw $s1, 4($sp)
+	lw $ra, 0($sp)
+	addi $sp, $sp, 12
+	jr $ra	
+		
+userInterface:
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	li $v0, 4
+	la $a0, welcomeMessage
+	syscall
+	li $v0, 4
+	la $a0, newLine
+	syscall
+	program:
+	#prompts for the user
+	li $v0, 4
+	la $a0, matrixSizeOption
+	syscall
+	li $v0, 4
+	la $a0, allocateOption
+	syscall
+	li $v0, 4
+	la $a0, displayOption
+	syscall
+	li $v0, 4
+	la $a0, rowMajorOption
+	syscall
+	li $v0, 4
+	la $a0, colMajorOption
+	syscall
+	li $v0, 4
+	la $a0, quitOption
+	syscall
+	li $v0, 4
+	la $a0, option
+	syscall
+	#getting user's input
+	li $v0, 5
+	syscall #different cases regarding different menu options
+ 	add $t0, $v0, $zero
+ 	beq $t0, 1, matrixSize
+ 	beq $t0, 2, allocate
+ 	beq $t0, 3, display
+ 	beq $t0, 4, rowMajor
+ 	beq $t0, 5, colMajor
+ 	beq $t0, 6, quit
+ 	j done
+ 	matrixSize:
+ 		li $v0, 4
+		la $a0, matrixSizePrompt
+		syscall
+		li $v0, 5 #read the size of the matrix
+		syscall
+		add $s0, $v0, $zero
+		mul $s1, $s0, $s0 
+		j done
+	allocate:
+		li $v0, 4
+		la $a0, allocatePrompt
+		syscall
+		mul $a0, $s1, 4 # size of the array
+		li $v0, 9 # allocation of the memory
+		syscall
+		move $s2, $v0
+		jal matrixOp
+		j done
+	display:
+		li $v0, 4
+		la $a0, displayPrompt
+		syscall
+		li $v0, 5
+		syscall
+		add $s3, $v0, $zero 
+		li $v0, 5
+		syscall
+		add $s4, $v0, $zero #a1 is the row number
+		jal displayElement
+		j done
+	rowMajor:
+		li $v0, 4
+		la $a0, rowMajorPrompt
+		syscall
+		jal findRowAverage
+		j done
+	colMajor:
+		li $v0, 4
+		la $a0, rowMajorPrompt
+		syscall
+		jal findColAverage
+		j done
+	done:
+		j program
+	quit:
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra
+
+
+finish:	
+	li $v0, 4
+	la $a0, rowMajorPrompt
+	syscall	
+
+.data
+welcomeMessage: 	.asciiz "Welcome to the program. This program finds the average of the elements of NxN square matrix.\n"
+matrixSizeOption: 	.asciiz "Enter 1 if you want to change the size of the matrix -> N.\n"
+allocateOption:		.asciiz "Enter 2 if you want to allocate an array with proper size.\n"
+displayOption:		.asciiz "Enter 3 if you want to display desired element of the matrix by its row and column number.\n"
+rowMajorOption:		.asciiz "Enter 4 if you want to know the average of the matrix elements by row-major.\n"
+colMajorOption:		.asciiz "Enter 5 if you want to know the average of the matrix elements by column-major.\n"
+quitOption:		.asciiz "Enter 6 if you want to quit the program.\n"
+option:			.asciiz "Enter your option according to the prompts.\n"
+matrixSizePrompt:	.asciiz "Enter a integer value for size of the matrix -> N.\n"
+allocatePrompt:		.asciiz "The allocation will be done.\n"
+displayPrompt:		.asciiz "First enter the row number then the column number of the matrix for desired element.\n"
+rowMajorPrompt:		.asciiz "The average of the numbers in the each row will be displayed:\n"
+colMajorPrompt:		.asciiz "The average of the numbers in the each column will be displayed:\n"
+rowAveDisplay:		.asciiz "Elements' average by row-major is "
+colAveDisplay:		.asciiz "Elements' average by col-major is "
+dispElement:		.asciiz "Desired element is "
+bye:			.asciiz "Bye!"
+newLine:		.asciiz "\n"

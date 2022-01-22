@@ -1,0 +1,213 @@
+CS224
+3
+1
+YAĞIZ YAŞAR
+21902951
+###################### PART 1 ######################
+
+###################### TEXT  ######################
+
+		.text
+
+main:
+	la $a0, main
+	la $a1, endOfMain
+	
+	jal InstructionCount
+	
+	add $s0, $v0, $0 #lw instruction count
+	add $s1, $v1, $0 #add instruction count
+	
+	li $v0, 4
+	la $a0, noOfAddInstr 
+	syscall
+	
+	li $v0, 1
+	add $a0, $s1, $zero 
+	syscall
+	
+	li $v0, 4
+	la $a0, newLine 
+	syscall
+	
+	li $v0, 4
+	la $a0, noOfLwInstr 
+	syscall
+	
+	li $v0, 1
+	add $a0, $s0, $zero 
+	syscall
+	
+	li $v0, 4
+	la $a0, newLine 
+	syscall
+	
+	j done
+	
+	
+endOfMain:
+
+InstructionCount:
+	addi $sp, $sp, -24
+	sw $s0, 0($sp) #current instruction
+	sw $s1, 4($sp) #current instructions opcode and funct
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	
+	
+	lui $s2, 0xFC00
+	ori $s2, $s2, 0x003F  #s2 is the register to check add instruction opcodde and function
+	
+	lui $s3, 0xFC00 #s3 is the register to check lw instruction opcode 
+	
+	lui $s4, 0x0000
+	ori $s4, $s4, 0x0020 #s2 is the register holds add instruction opcoded and function 
+	
+	lui $s5, 0x8C00 #s5 is the register holds lw instruciton opcode 
+	
+	add $v0, $0, $0 #lw counter
+	add $v1, $0, $0 #add counter
+	
+	loop:
+		lw $s0, 0($a0)
+		
+
+		and $s1, $s0, $s2
+		beq $s1, $s4, addFunction
+		
+		and $s1, $s0, $s3
+		beq $s1, $s5, lwFunction
+		
+		
+		lwFunction:
+			addi $v0, $v0, 1
+			j skip
+			
+		addFunction:
+			addi $v1, $v1, 1
+		
+		skip:
+		
+		addi $a0, $a0, 4
+		bne $a0, $a1, loop
+		
+		loopDone:
+		
+		lw $s5, 20($sp)
+		lw $s4, 16($sp)
+		lw $s3, 12($sp)
+		lw $s2, 8($sp)
+		lw $s1, 4($sp)
+		lw $s0, 0($sp)
+		addi $sp, $sp, 24
+		
+		jr $ra			
+done:
+
+	.data
+noOfAddInstr: .asciiz "Number of add functions in the program is "	
+noOfLwInstr: .asciiz "Number of lw functions in the program is "
+newLine: .asciiz "\n"
+###################### DATA  ######################
+	.data
+noOfAddInstr: .asciiz "Number of add functions in the program is "	
+noOfLwInstr: .asciiz "Number of lw functions in the program is "
+newLine: .asciiz "\n"
+
+
+
+###################### PART 2  ######################
+
+###################### TEXT  ######################
+
+	.text
+	
+start:	
+
+
+li $v0, 4
+la $a0, userPrompt 
+syscall
+
+li $v0, 4
+la $a0, newLine 
+syscall
+
+li $v0, 5
+syscall
+
+addi $s0, $v0, 0
+
+li $v0, 5
+syscall
+
+addi $s1, $v0, 0
+
+addi $a0, $s0, 0
+addi $a1, $s1, 0
+
+jal RecursiveDivision
+
+li $v0, 4
+la $a0, result 
+syscall
+
+
+add $s0, $v1, $0
+
+add $a0, $a0, $0
+
+li $v0, 1
+add $a0, $s0, $zero 
+syscall
+
+again:
+	li $v0, 4
+	la $a0, newLine 
+	syscall
+	
+	li $v0, 4
+	la $a0, againPrompt 
+	syscall
+	
+	li $v0, 5
+	syscall
+	
+	add $s0, $0, $0
+	add $s1, $0, $0
+	add $v1, $0, $0
+	
+	beq $v0, 1, start
+	
+	
+	j done
+	
+
+RecursiveDivision: 
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	bge  $a0, $a1, Recursion
+	addi $sp, $sp, 4
+	jr $ra
+	
+	Recursion:
+		sub $a0, $a0, $a1
+		jal RecursiveDivision
+		lw $ra, 0($sp)	
+		addi $v1, $v1, 1
+		addi $sp, $sp, 4
+		jr $ra
+done:
+
+
+###################### DATA  ######################
+
+
+
+	.data
+userPrompt: .asciiz "Please enter two numbers to divide"
+newLine: .asciiz "\n"
+result: .asciiz "Result is "
+againPrompt: .asciiz "Do you want to run the program again? Yes (1) or No(Any Other Number)\n"

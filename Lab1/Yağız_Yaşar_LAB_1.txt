@@ -1,0 +1,190 @@
+CS224
+1
+1
+Yağız Yaşar
+21902951
+
+#Part 3
+
+.text
+#$s0 = array's first address, $s1 = array's last address, $s2 = array's size in bytes, $s3 = array's size 
+la $s0, array
+lw $s2, arrsize
+lw $s3, arrsize
+subi $s2, $s2, 1
+sll $s2, $s2, 2
+add $s1, $s2, $s0
+la $t0, array
+
+addi $t3, $t3, 0 # Sum
+lw $t4, 0($s0) # Maximum
+lw $t5, 0($s0) # Minimum
+
+li $v0, 4
+la $a0, ui_message1
+syscall
+
+li $v0, 4
+la $a0, ui_message2
+syscall
+
+li $v0, 4
+la $a0, ui_message3
+syscall
+
+lw $t2, ($t0)
+
+addi $s1, $s1, 4
+
+print_array:
+  li $v0, 34
+  add $a0, $zero, $t0
+  syscall
+  
+  li $v0, 4
+  la $a0, space
+  syscall
+  
+  li $v0, 1
+  la $a0, 0($t2)
+  syscall
+  
+  li $v0, 4
+  la $a0, new_line
+  syscall
+  
+  add $t3, $t3, $t2
+  blt $t4, $t2, change_max
+  bgt $t5, $t2, change_min
+come:
+  
+  
+  addi $t0, $t0, 4
+  beq $s1, $t0, done
+  
+  lw $t2, ($t0)
+  j print_array  
+  
+change_max:
+  addi $t4, $t2, 0
+  j come 
+
+change_min:
+  addi $t5, $t2, 0
+  j come
+
+
+
+done:
+  div $t3, $s3
+  mflo $t3
+  li $v0, 4
+  la $a0, ui_message4
+  syscall
+  li $v0, 1
+  la $a0, 0($t3)
+  syscall
+  
+  li $v0, 4
+  la $a0, new_line
+  syscall
+  li $v0, 4
+  la $a0, ui_message5
+  syscall
+  li $v0, 1
+  la $a0, 0($t4)
+  syscall
+  
+  li $v0, 4
+  la $a0, new_line
+  syscall
+  li $v0, 4
+  la $a0, ui_message6
+  syscall
+  li $v0, 1
+  la $a0, 0($t5)
+  syscall
+
+
+
+.data
+ui_message1: .asciiz "Memory Address  Array Element\n"
+ui_message2: .asciiz "Position (hex)  Value (int)\n"
+ui_message3: .asciiz "=============   ===========\n"    
+ui_message4: .asciiz "Average: "
+ui_message5: .asciiz "Max: "
+ui_message6: .asciiz "Min: "
+array: .word 30, 82, 104, 1, 3, 3, 2, 9
+arrsize: .word 8
+new_line: .asciiz "\n"
+space: .asciiz "      "
+
+#End of Part 3
+
+#Part 4
+
+.text
+li $v0, 4
+la $a0, message_a
+syscall
+li $v0, 5
+syscall
+move $s0, $v0
+
+li $v0, 4
+la $a0, message_b
+syscall
+li $v0, 5
+syscall
+move $s1, $v0
+
+li $v0, 4
+la $a0, message_c
+syscall
+li $v0, 5
+syscall
+move $s2, $v0
+
+li $v0, 4
+la $a0, message_d
+syscall
+li $v0, 5
+syscall
+move $s3, $v0
+
+div $s0, $s1
+mflo $t0
+
+mult $s2, $s3
+mfhi $t1
+sll $t1, $t1, 16
+mflo $t2
+or $t1, $t1, $t2
+
+sub $t1, $t1, $s0
+
+div $t1, $s1
+mfhi $t2
+
+add $t3, $t0, $t2
+
+
+li $v0, 4
+la $a0, message_result 
+syscall
+
+li $v0, 1
+la $a0, 0($t3)
+syscall
+
+
+
+
+.data
+message_a: .asciiz "Please enter an integer for a.\n"
+message_b: .asciiz "Please enter an integer for b.\n"
+message_c: .asciiz "Please enter an integer for c.\n"
+message_d: .asciiz "Please enter an integer for d.\n"
+message_result: .asciiz "The result for (a/b) + (c*d-a) % b :\n"
+
+#End Of Part 4

@@ -1,0 +1,335 @@
+CS224
+2
+1
+YAĞIZ YAŞAR
+21902951
+#######################################
+########## Start of 3rd Part ##########
+#######################################
+##########       Text        ##########
+#######################################
+.text
+
+main:
+li $v0, 4
+la $a0, messageWelcome
+syscall
+
+li $v0, 5 
+syscall
+
+blt $v0, 1, printOutOfBounds
+
+move $a1, $v0 #array size in bytes
+
+jal getArray
+
+jal CheckSymmetric 
+   
+jal FindMinAndMax
+   
+   
+   
+j done
+
+getArray:
+   
+   addi $sp, $sp, -16
+   sw $s0, 0($sp)
+   sw $s1, 4($sp)
+   sw $ra, 8($sp)
+   sw $s2, 12($sp)
+   
+   li $v0, 9 
+   add $a0, $zero, $a1
+   syscall
+   
+   add $s0, $zero, $v0
+   
+   add $s2, $zero, $v0
+   
+   add $s1, $s1, $a1
+   sll $s1, $s1, 2
+   add $s1, $s1, $s0  
+   
+   
+   GetArrayElements:
+      li $v0, 4
+      la $a0, messageValue
+      syscall
+      
+      li $v0, 5 
+      syscall
+      
+      sw $v0, ($s0)
+      
+      addi $s0, $s0, 4 #updating array address
+   
+      bne $s1, $s0, GetArrayElements
+      
+   add $a0, $s2, $zero
+   
+   jal PrintArray
+   
+   add $a0, $s2, $zero
+   
+   lw $s2, 12($sp)
+   lw $ra, 8($sp)
+   lw $s1, 4($sp)
+   lw $s0, 0($sp) 
+   addi $sp, $sp, 16
+   
+   jr $ra
+   
+   PrintArray:
+   addi $sp, $sp, -12
+   sw $s0, 0($sp) #current address
+   sw $s1, 4($sp) #arraysize
+   sw $s2, 8($sp) #counter
+   
+   add $s0, $a0, $0
+   
+   add $s1, $a1, $0
+   
+   sll $s1, $s1, 2
+   
+   add $s1, $s0, $s1 
+   
+   
+   Print:
+      li $v0, 1
+      lw $a0, ($s0)
+      syscall
+  
+      li $v0, 4 
+      la $a0, space
+      syscall
+  
+      addi $s0, $s0, 4 #current address change
+  
+      beq $s1, $s0, jump1 # while (counter != arraysize) 
+  
+      j Print
+   
+   jump1:
+   
+   
+   lw $s2, 8($sp) #counter
+   lw $s1, 4($sp) #arraysize
+   lw $s0, 0($sp) #current address
+   addi $sp, $sp, 12
+   
+ 
+   jr $ra
+   
+   CheckSymmetric:
+   addi $sp, $sp, -20 #allocating space for registers
+   sw $s0, 0($sp) #counting from first address, counter1
+   sw $s1, 4($sp) #counting from last address, counter2
+   sw $s2, 8($sp) #value 1
+   sw $s3, 12($sp) #value 2
+   sw $s4, 16($sp)
+   
+   add $s0, $a0, $zero
+   
+   add $s4, $a0, $zero
+   
+   #initializing s registers
+   add $s1, $a1, $zero
+   sll $s1, $s1, 2
+   add $s1, $a0, $s1
+   subi $s1, $s1, 4
+   
+   lw $s2, 0($s0)
+   lw $s3, 0($s1)
+   
+   CheckValues:
+      lw $s2, 0($s0)
+      lw $s3, 0($s1)
+      
+      bne $s2, $s3, false
+      ble $s1, $s0, true
+      addi $s0, $s0, 4 #counter1 incrementation
+      addi $s1, $s1, -4 #counter2 decrementation
+      
+      j CheckValues
+      
+      true:
+         
+         li $v0, 4
+         la $a0, newLine
+         syscall 
+         
+         li $v0, 4
+         la $a0, messageTrue
+         syscall
+         
+         addi $v0, $zero, 0
+      
+         j jump2
+      
+      false:
+         li $v0, 4
+         la $a0, newLine
+         syscall
+         li $v0, 4
+         la $a0, messageFalse
+         syscall 
+         addi $v0, $zero, 0
+      
+      jump2:
+    
+   add $a0, $s4, $zero
+   
+   lw $s4, 16($sp)     
+   lw $s3, 12($sp)  
+   lw $s2, 8($sp) 
+   lw $s1, 4($sp) 
+   lw $s0, 0($sp)
+   addi $sp, $sp, 20 #deallocating space for registers
+   
+   
+   jr $ra
+   
+   FindMinAndMax:   
+      addi $sp, $sp, -20
+      sw $s0, 0($sp) #current address
+      sw $s1, 4($sp) #current value
+      sw $s2, 8($sp) #maximum
+      sw $s3, 12($sp) #minimum
+      sw $s4, 16($sp) #last address of the array
+   
+      add $s0, $s0, $a0
+   
+      lw $s1, 0($s0)
+      lw $s2, 0($s0)
+      lw $s3, 0($s0)
+   
+      add $s4, $s4, $a1
+      sll $s4, $s4, 2
+      add $s4, $s0, $s4
+   
+      CheckValues2:
+         blt $s2, $s1, changeMax #changing max value if the current value is bigger
+         bgt $s3, $s1, changeMin #changing min value if the current value is smaller
+      
+      maxMinJump:
+         addi $s0, $s0, 4
+         lw $s1, 0($s0)
+      
+         beq $s0, $s4, maxMinCheckDone
+         j CheckValues2
+      
+         changeMax:
+            addi $s2, $s1, 0
+            
+     
+            j maxMinJump
+     
+         changeMin:  
+            addi $s3, $s1, 0 
+            
+     
+            j maxMinJump 
+      
+   maxMinCheckDone:
+      
+      
+      
+      maxMinMessage:
+      
+      li $v0, 4
+      la $a0, newLine
+      syscall
+      
+      li $v0, 4
+      la $a0, messageMaximum
+      syscall
+      
+      li $v0, 1
+      add $a0, $s2, $zero
+      syscall
+      
+      li $v0, 4
+      la $a0, newLine
+      syscall
+      
+      li $v0, 4
+      la $a0, messageMinimum
+      syscall
+      
+      li $v0, 1
+      add $a0, $s3, $zero
+      syscall    
+      
+      addi $v0, $s2, 0
+      addi $v1, $s3, 0
+        
+      lw $s4, 16($sp) 
+      lw $s3, 12($sp)  
+      lw $s2, 8($sp) 
+      lw $s1, 4($sp) 
+      lw $s0, 0($sp)
+      addi $sp, $sp, 20
+   
+   jr $ra
+   
+
+printOutOfBounds:
+   li $v0, 4
+      la $a0, messageOutOfBounds
+      syscall
+      
+done:        
+  
+   
+         
+   
+   
+         
+
+#######################################
+##########       Data        ##########
+#######################################
+.data
+space: .asciiz " "
+newLine: .asciiz "\n"
+messageWelcome: .asciiz "Welcome! Please enter the array size.\n"
+messageValue: .asciiz "Enter a value.\n"
+messageMaximum: .asciiz "The maximum value of the array:"
+messageMinimum: .asciiz "The minimum value of the array: "
+messageTrue: .asciiz "The array is symmetric"
+messageFalse: .asciiz "The array is not symmetric"
+messageOutOfBounds: .asciiz "Array size is not possible"
+
+#######################################
+########## Start of 4th Part ##########
+#######################################
+##########       Text        ##########
+#######################################
+#DID NOT FINISH
+.text
+
+li $v0, 5 
+syscall
+
+add $a0, $v0, $zero
+
+li $v0, 5 
+syscall
+
+add $a1, $v0, $zero
+
+li $v0, 5 
+syscall
+
+add $a2, $v0, $zero
+
+loop:
+   
+   
+   
+    
+    
+
+.data
